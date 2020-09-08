@@ -327,21 +327,37 @@ md"""
 👉 Write a function `noisify(x::Number, s)` to add randomness of intensity $s$ to a value $x$, i.e. to add a random value between $-s$ and $+s$ to $x$. If the result falls outside the range $(0, 1)$ you should "clamp" it to that range. (Note that Julia has a `clamp` function, but you should write your own function `myclamp(x)`.)
 """
 
+# ╔═╡ e9720754-f1b0-11ea-03fd-5533b9c0efcc
+begin
+	Pkg.add("Distributions")
+	import Distributions: Uniform 
+	rand(Uniform(-1,1), 1, 1)[1]
+end
+
 # ╔═╡ f6e2cb2a-ee07-11ea-06ee-1b77e34c1e91
 begin
+	function myclamp(x)
+		if x > 1
+			return 1
+		end
+		if x < 0
+			return 0
+		end
+		return x
+	end
+	
 	function noisify(x::Number, s)
-
-		return missing
+		if s == 0 return x end
+		val = rand(Uniform(-s,s), 1, 1)[1] + x
+		return myclamp(val)
 	end
 	
 	function noisify(color::AbstractRGB, s)
-		# you will write me in a later exercise!
-		return missing
+		return RGB(noisify(color.r, s),noisify(color.g, s),noisify(color.b, s))
 	end
 	
 	function noisify(image::AbstractMatrix, s)
-		# you will write me in a later exercise!
-		return missing
+		return noisify.(image,s)
 	end
 end
 
@@ -384,7 +400,7 @@ You may need noise intensities larger than 1. Why?
 
 # ╔═╡ bdc2df7c-ee0c-11ea-2e9f-7d2c085617c1
 answer_about_noise_intensity = md"""
-The image is unrecognisable with intensity ...
+The image is unrecognisable with intensity 2.7
 """
 
 # ╔═╡ 81510a30-ee0e-11ea-0062-8b3327428f9d
@@ -438,7 +454,7 @@ Let's create a vector `v` of random numbers of length `n=100`.
 """
 
 # ╔═╡ 7fcd6230-ee09-11ea-314f-a542d00d582e
-n = 100
+n = 10
 
 # ╔═╡ 7fdb34dc-ee09-11ea-366b-ffe10d1aa845
 v = rand(n)
@@ -455,7 +471,7 @@ You've seen some colored lines in this notebook to visualize arrays. Can you mak
 """
 
 # ╔═╡ 01070e28-ee0f-11ea-1928-a7919d452bdd
-
+colored_line(v)
 
 # ╔═╡ 7522f81e-ee1c-11ea-35af-a17eb257ff1a
 md"Try changing `n` and `v` around. Notice that you can run the cell `v = rand(n)` again to regenerate new random values."
@@ -472,8 +488,9 @@ A better solution is to use the *closest* value that is inside the vector. Effec
 
 # ╔═╡ 802bec56-ee09-11ea-043e-51cf1db02a34
 function extend(v, i)
-	
-	return missing
+	if i in 1:length(v) return v[i] end
+	if i > length(v) return v[lastindex(v)] end
+	if i < 1 return v[1] end
 end
 
 # ╔═╡ b7f3994c-ee1b-11ea-211a-d144db8eafc2
@@ -512,8 +529,18 @@ md"""
 
 # ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
 function blur_1D(v, l)
-	
-	return missing
+	kernel = collect(-l:l)
+	box = Float64[]
+	blured = Float64[]
+	for idx in 1:length(v)
+		for i in idx-l:idx+l
+			append!(box,extend(v,i))
+		end
+		val = sum(prod(vcat(kernel,box),dims=1))
+		append!(blured,val)
+# 		box = []
+	end
+	return blured
 end
 
 # ╔═╡ 808deca8-ee09-11ea-0ee3-1586fa1ce282
@@ -539,7 +566,16 @@ md"""
 """
 
 # ╔═╡ ca1ac5f4-ee1c-11ea-3d00-ff5268866f87
+colored_line(v)
 
+# ╔═╡ c5437b8c-f1e3-11ea-232b-7be2baaa98ca
+@bind l_box Slider(0:1:10, show_value=true)
+
+# ╔═╡ 96aca39a-f1e3-11ea-18e3-7bd50cd12484
+begin
+	blur_1D([1 2 3],l_box)
+# 	colored_line(blur_1D(v,l_box))
+end
 
 # ╔═╡ 80ab64f4-ee09-11ea-29b4-498112ed0799
 md"""
@@ -1437,6 +1473,7 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═943103e2-ee0b-11ea-33aa-75a8a1529931
 # ╟─f6d6c71a-ee07-11ea-2b63-d759af80707b
 # ╠═f6e2cb2a-ee07-11ea-06ee-1b77e34c1e91
+# ╠═e9720754-f1b0-11ea-03fd-5533b9c0efcc
 # ╟─f6ef2c2e-ee07-11ea-13a8-2512e7d94426
 # ╟─f6fc1312-ee07-11ea-39a0-299b67aee3d8
 # ╟─774b4ce6-ee1b-11ea-2b48-e38ee25fc89b
@@ -1476,6 +1513,8 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─808deca8-ee09-11ea-0ee3-1586fa1ce282
 # ╟─809f5330-ee09-11ea-0e5b-415044b6ac1f
 # ╠═ca1ac5f4-ee1c-11ea-3d00-ff5268866f87
+# ╠═c5437b8c-f1e3-11ea-232b-7be2baaa98ca
+# ╠═96aca39a-f1e3-11ea-18e3-7bd50cd12484
 # ╟─ea435e58-ee11-11ea-3785-01af8dd72360
 # ╟─80ab64f4-ee09-11ea-29b4-498112ed0799
 # ╠═28e20950-ee0c-11ea-0e0a-b5f2e570b56e

@@ -528,17 +528,17 @@ md"""
 """
 
 # ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
-function blur_1D(v, l)
-	kernel = collect(-l:l)
+function blur_1D(v, kernel)
+	l = (length(kernel) - 1) ÷ 2
 	box = Float64[]
 	blured = Float64[]
 	for idx in 1:length(v)
-		for i in idx-l:idx+l
-			append!(box,extend(v,i))
+		for i in idx - l:idx + l
+			append!(box, extend(v, i))
 		end
-		val = sum(prod(vcat(kernel,box),dims=1))
-		append!(blured,val)
-# 		box = []
+		val = sum(kernel .* box)
+		append!(blured, val)
+		box = Float64[]
 	end
 	return blured
 end
@@ -572,10 +572,7 @@ colored_line(v)
 @bind l_box Slider(0:1:10, show_value=true)
 
 # ╔═╡ 96aca39a-f1e3-11ea-18e3-7bd50cd12484
-begin
-	blur_1D([1 2 3],l_box)
-# 	colored_line(blur_1D(v,l_box))
-end
+colored_line(blur_1D(v,l_box))
 
 # ╔═╡ 80ab64f4-ee09-11ea-29b4-498112ed0799
 md"""
@@ -593,8 +590,7 @@ Again, we need to take care about what happens if $v_{i -n }$ falls off the end 
 
 # ╔═╡ 28e20950-ee0c-11ea-0e0a-b5f2e570b56e
 function convolve_vector(v, k)
-	
-	return missing
+	return blur_1D(v, k)
 end
 
 # ╔═╡ 93284f92-ee12-11ea-0342-833b1a30625c

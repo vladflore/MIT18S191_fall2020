@@ -23,10 +23,22 @@ function convolve_vector(v, k)
 	return blur_1D(v, k)
 end
 
-test_convolution = let
-	# v = [1, 10, 100, 1000, 10000]
-	# k = [0, 1, 0]
-	v = [1, 10, 100]
-	k = [0, 1, 1]
-	convolve_vector(v, k)
+# test_convolution = let
+# 	# v = [1, 10, 100, 1000, 10000]
+# 	# k = [0, 1, 0]
+# 	v = [1, 10, 100]
+# 	k = [0, 1, 1]
+# 	convolve_vector(v, k)
+# end
+
+function gaussian(x, sigma=1)
+	return 1 / (2 * pi * sigma^2) * exp(-(x^2 / 2 * sigma^2))
 end
+
+function gaussian_kernel(n)
+	kernel = [gaussian(i) for i in -n:n]
+	return kernel ./ sum(kernel)
+end
+
+result = gaussian_kernel(1)
+sum(result)

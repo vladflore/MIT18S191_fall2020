@@ -692,8 +692,13 @@ md"""
 
 # ╔═╡ 7c2ec6c6-ee15-11ea-2d7d-0d9401a5e5d1
 function extend_mat(M::AbstractMatrix, i, j)
-	
-	return missing
+	num_rows, num_cols = size(M)
+	if i in 1:num_rows && j in 1:num_cols return M[i,j] end
+	if i < 1 i = 1 end
+	if i > num_rows i = num_rows end
+	if j < 1 j = 1 end
+	if j > num_cols j = num_cols end
+	return M[i,j]
 end
 
 # ╔═╡ 9afc4dca-ee16-11ea-354f-1d827aaa61d2
@@ -727,10 +732,33 @@ md"""
 """
 
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
+
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
-	
-	return missing
-end
+	newM = copy(M)
+
+	steps = (size(K, 1) - 1) ÷ 2
+	k_row_idx = size(K, 1) ÷ 2 + 1
+	k_col_idx = size(K, 2) ÷ 2 + 1
+
+	for i in 1:size(M, 1)
+		for j in 1:size(M, 2)
+			s = M[i,j] * K[k_row_idx,k_col_idx]
+			for step in 1:steps
+				s += extend_mat(M, i, j - step) * K[k_row_idx,k_col_idx - step]
+				s += extend_mat(M, i, j + step) * K[k_row_idx,k_col_idx + step]
+				s += extend_mat(M, i - step, j) * K[k_row_idx - step,k_col_idx]
+				s += extend_mat(M, i + step, j) * K[k_row_idx + step,k_col_idx]
+				s += extend_mat(M, i - step, j - step) * K[k_row_idx - step, k_col_idx - step]
+				s += extend_mat(M, i + step, j + step) * K[k_row_idx + step,k_col_idx + step]
+				s += extend_mat(M, i - step, j + step) * K[k_row_idx - step,k_col_idx + step]
+				s += extend_mat(M, i + step, j - step) * K[k_row_idx + step,k_col_idx - step]
+			end
+			newM[i,j] = s
+		end
+	end
+
+	return newM
+end  
 
 # ╔═╡ 5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
 md"_Let's test it out! 🎃_"
@@ -739,10 +767,10 @@ md"_Let's test it out! 🎃_"
 test_image_with_border = [get(small_image, (i, j), Gray(0)) for (i,j) in Iterators.product(-1:7,-1:7)]
 
 # ╔═╡ 275a99c8-ee1e-11ea-0a76-93e3618c9588
-K_test = [
-	0   0  0
-	1/2 0  1/2
-	0   0  0
+K_test = 1/9*[
+	1 1 1
+	1 1 1
+	1 1 1
 ]
 
 # ╔═╡ 42dfa206-ee1e-11ea-1fcd-21671042064c
@@ -773,10 +801,17 @@ Here, the 2D Gaussian kernel will be defined as
 $$G(x,y)=\frac{1}{2\pi \sigma^2}e^{\frac{-(x^2+y^2)}{2\sigma^2}}$$
 """
 
+# ╔═╡ 59057c2a-f29e-11ea-2c71-efa59fa9dc45
+function gaussian_2D(x, y, sigma=1)
+	return 1 / (2 * pi * sigma^2) * exp(-((x^2 + y^2) / 2 * sigma^2))
+end
+
 # ╔═╡ aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 function with_gaussian_blur(image)
-	
-	return missing
+	n=1
+	g_k = [gaussian_2D(x, y) for x in -n:n, y in -n:n ]
+	g_k = g_k ./ sum(g_k)
+	return convolve_image(image, g_k)
 end
 
 # ╔═╡ 8ae59674-ee18-11ea-3815-f50713d0fa08
@@ -1394,8 +1429,11 @@ end
 # ╔═╡ f461f5f2-ee18-11ea-3d03-95f57f9bf09e
 gauss_camera_image = process_raw_camera_data(gauss_raw_camera_data);
 
-# ╔═╡ a75701c4-ee18-11ea-2863-d3042e71a68b
+# ╔═╡ cd1cb766-f2c3-11ea-0571-8de619bfa1b8
 with_gaussian_blur(gauss_camera_image)
+
+# ╔═╡ d6f7263c-f2e0-11ea-156b-63107cb9298b
+gauss_camera_image
 
 # ╔═╡ 1ff6b5cc-ee19-11ea-2ca8-7f00c204f587
 sobel_camera_image = Gray.(process_raw_camera_data(sobel_raw_camera_data));
@@ -1545,26 +1583,28 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─9afc4dca-ee16-11ea-354f-1d827aaa61d2
 # ╠═cf6b05e2-ee16-11ea-3317-8919565cb56e
 # ╟─e3616062-ee27-11ea-04a9-b9ec60842a64
-# ╟─e5b6cd34-ee27-11ea-0d60-bd4796540b18
-# ╟─d06ea762-ee27-11ea-2e9c-1bcff86a3fe0
-# ╟─e1dc0622-ee16-11ea-274a-3b6ec9e15ab5
+# ╠═e5b6cd34-ee27-11ea-0d60-bd4796540b18
+# ╠═d06ea762-ee27-11ea-2e9c-1bcff86a3fe0
+# ╠═e1dc0622-ee16-11ea-274a-3b6ec9e15ab5
 # ╟─efd1ceb4-ee1c-11ea-350e-f7e3ea059024
-# ╟─3cd535e4-ee26-11ea-2482-fb4ad43dda19
+# ╠═3cd535e4-ee26-11ea-2482-fb4ad43dda19
 # ╟─7c41f0ca-ee15-11ea-05fb-d97a836659af
 # ╠═8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 # ╟─0cabed84-ee1e-11ea-11c1-7d8a4b4ad1af
 # ╟─5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
-# ╟─577c6daa-ee1e-11ea-1275-b7abc7a27d73
+# ╠═577c6daa-ee1e-11ea-1275-b7abc7a27d73
 # ╠═275a99c8-ee1e-11ea-0a76-93e3618c9588
 # ╠═42dfa206-ee1e-11ea-1fcd-21671042064c
 # ╟─6e53c2e6-ee1e-11ea-21bd-c9c05381be07
 # ╠═e7f8b41a-ee25-11ea-287a-e75d33fbd98b
 # ╟─8a335044-ee19-11ea-0255-b9391246d231
 # ╠═7c50ea80-ee15-11ea-328f-6b4e4ff20b7e
+# ╠═59057c2a-f29e-11ea-2c71-efa59fa9dc45
 # ╠═aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 # ╟─8ae59674-ee18-11ea-3815-f50713d0fa08
-# ╟─94c0798e-ee18-11ea-3212-1533753eabb6
-# ╠═a75701c4-ee18-11ea-2863-d3042e71a68b
+# ╠═94c0798e-ee18-11ea-3212-1533753eabb6
+# ╠═cd1cb766-f2c3-11ea-0571-8de619bfa1b8
+# ╠═d6f7263c-f2e0-11ea-156b-63107cb9298b
 # ╟─f461f5f2-ee18-11ea-3d03-95f57f9bf09e
 # ╟─7c6642a6-ee15-11ea-0526-a1aac4286cdd
 # ╠═9eeb876c-ee15-11ea-1794-d3ea79f47b75

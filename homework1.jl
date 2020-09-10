@@ -57,7 +57,7 @@ end
 
 
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
-	newM = copy(M)
+	newM = fill(RGB(0.0, 0.0, 0.0), size(M))
 	# K should be a square matrix, right?
 	k_row, k_col = size(K)
 	l = (k_row - 1) ÷ 2
@@ -82,7 +82,17 @@ function with_gaussian_blur(image)
 	return convolve_image(image, g_k)
 end
 
-save("philip_convoluted.jpg",with_gaussian_blur(load("philip.jpg")))
+function with_sobel_edge_detect(image)
+	kx = [1 0 -1;2 0 -2;1 0 -1]
+	ky = [1 2 1;0 0 0;-1 -2 -1]
+	Gx = convolve_image(image, kx)
+	Gy = convolve_image(image, ky)
+	p_sqr(p) = RGB(p.r^2, p.g^2, p.b^2)
+	p_sqrt(p) = RGB(sqrt(p.r), sqrt(p.g), sqrt(p.b))
+	return p_sqrt.(p_sqr.(Gx) + p_sqr.(Gy))
+end
+
 # file = download("https://i.imgur.com/VGPeJ6s.jpg", "philip.jpg")
-# save("philip_smaller_convoluted.png",with_gaussian_blur(load("philip_smaller.png")))
-# save("dog_convoluted.jpg",with_gaussian_blur(load("dog.jpg")))
+
+# with_gaussian_blur(load("dog.jpg"))
+with_sobel_edge_detect(load("dog.jpg"))

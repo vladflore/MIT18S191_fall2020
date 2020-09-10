@@ -743,7 +743,7 @@ md"""
 
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
-	newM = copy(M)
+	newM = fill(RGB(0.0,0.0,0.0),size(M))
 	# K should be a square matrix, right?
 	k_row, k_col = size(K)
 	l = (k_row - 1) ÷ 2
@@ -867,9 +867,17 @@ For simplicity you can choose one of the "channels" (colours) in the image to ap
 
 # ╔═╡ 9eeb876c-ee15-11ea-1794-d3ea79f47b75
 function with_sobel_edge_detect(image)
-	
-	return missing
+	kx=[1 0 -1;2 0 -2;1 0 -1]
+	ky=[1 2 1;0 0 0;-1 -2 -1]
+	Gx=convolve_image(image,kx)
+	Gy=convolve_image(image,ky)
+	p_sqr(p) = RGB(p.r^2,p.g^2,p.b^2)
+	p_sqrt(p) = RGB(sqrt(p.r),sqrt(p.g),sqrt(p.b))
+	return p_sqrt.(p_sqr.(Gx) + p_sqr.(Gy))
 end
+
+# ╔═╡ 693291f4-f3a3-11ea-11ae-0399f0680d36
+with_sobel_edge_detect(philip)
 
 # ╔═╡ 1b85ee76-ee10-11ea-36d7-978340ef61e6
 md"""
@@ -1615,6 +1623,7 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─f461f5f2-ee18-11ea-3d03-95f57f9bf09e
 # ╟─7c6642a6-ee15-11ea-0526-a1aac4286cdd
 # ╠═9eeb876c-ee15-11ea-1794-d3ea79f47b75
+# ╠═693291f4-f3a3-11ea-11ae-0399f0680d36
 # ╟─1a0324de-ee19-11ea-1d4d-db37f4136ad3
 # ╠═1bf94c00-ee19-11ea-0e3c-e12bc68d8e28
 # ╟─1ff6b5cc-ee19-11ea-2ca8-7f00c204f587

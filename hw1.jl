@@ -454,7 +454,7 @@ Let's create a vector `v` of random numbers of length `n=100`.
 """
 
 # ╔═╡ 7fcd6230-ee09-11ea-314f-a542d00d582e
-n = 10
+n = 100
 
 # ╔═╡ 7fdb34dc-ee09-11ea-366b-ffe10d1aa845
 v = rand(n)
@@ -528,15 +528,14 @@ md"""
 """
 
 # ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
-function blur_1D(v, kernel)
-	l = (length(kernel) - 1) ÷ 2
+function blur_1D(v, l)
 	box = Float64[]
 	blured = Float64[]
 	for idx in 1:length(v)
 		for i in idx - l:idx + l
 			append!(box, extend(v, i))
 		end
-		val = sum(kernel .* box)
+		val = sum(box) / (2*l+1)
 		append!(blured, val)
 		box = Float64[]
 	end
@@ -590,7 +589,18 @@ Again, we need to take care about what happens if $v_{i -n }$ falls off the end 
 
 # ╔═╡ 28e20950-ee0c-11ea-0e0a-b5f2e570b56e
 function convolve_vector(v, k)
-	return blur_1D(v, k)
+	l = (length(k) - 1) ÷ 2
+	box = Float64[]
+	blured = Float64[]
+	for idx in 1:length(v)
+		for i in idx - l:idx + l
+			append!(box, extend(v, i))
+		end
+		val = sum(k .* box)
+		append!(blured, val)
+		box = Float64[]
+	end
+	return blured
 end
 
 # ╔═╡ 93284f92-ee12-11ea-0342-833b1a30625c
@@ -732,33 +742,19 @@ md"""
 """
 
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
-
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
 	newM = copy(M)
-
-	steps = (size(K, 1) - 1) ÷ 2
-	k_row_idx = size(K, 1) ÷ 2 + 1
-	k_col_idx = size(K, 2) ÷ 2 + 1
-
+	# K should be a square matrix, right?
+	k_row, k_col = size(K)
+	l = (k_row - 1) ÷ 2
 	for i in 1:size(M, 1)
 		for j in 1:size(M, 2)
-			s = M[i,j] * K[k_row_idx,k_col_idx]
-			for step in 1:steps
-				s += extend_mat(M, i, j - step) * K[k_row_idx,k_col_idx - step]
-				s += extend_mat(M, i, j + step) * K[k_row_idx,k_col_idx + step]
-				s += extend_mat(M, i - step, j) * K[k_row_idx - step,k_col_idx]
-				s += extend_mat(M, i + step, j) * K[k_row_idx + step,k_col_idx]
-				s += extend_mat(M, i - step, j - step) * K[k_row_idx - step, k_col_idx - step]
-				s += extend_mat(M, i + step, j + step) * K[k_row_idx + step,k_col_idx + step]
-				s += extend_mat(M, i - step, j + step) * K[k_row_idx - step,k_col_idx + step]
-				s += extend_mat(M, i + step, j - step) * K[k_row_idx + step,k_col_idx - step]
-			end
-			newM[i,j] = s
+			extended_M = [extend_mat(M, _i, _j) for _i in i - l:i + l, _j in j - l:j + l]
+			newM[i,j] = sum(extended_M .* K)
 		end
 	end
-
 	return newM
-end  
+end
 
 # ╔═╡ 5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
 md"_Let's test it out! 🎃_"
@@ -767,11 +763,11 @@ md"_Let's test it out! 🎃_"
 test_image_with_border = [get(small_image, (i, j), Gray(0)) for (i,j) in Iterators.product(-1:7,-1:7)]
 
 # ╔═╡ 275a99c8-ee1e-11ea-0a76-93e3618c9588
-K_test = 1/9*[
-	1 1 1
-	1 1 1
-	1 1 1
-]
+K_test = [
+	1/9 1/9 1/9
+	1/9 1/9 1/9
+	1/9 1/9 1/9
+	]
 
 # ╔═╡ 42dfa206-ee1e-11ea-1fcd-21671042064c
 convolve_image(test_image_with_border, K_test)
@@ -780,7 +776,7 @@ convolve_image(test_image_with_border, K_test)
 md"_Edit_ `K_test` _to create your own test case!_"
 
 # ╔═╡ e7f8b41a-ee25-11ea-287a-e75d33fbd98b
-convolve_image(philip, K_test)
+[philip convolve_image(philip, K_test)]
 
 # ╔═╡ 8a335044-ee19-11ea-0255-b9391246d231
 md"""
@@ -803,16 +799,25 @@ $$G(x,y)=\frac{1}{2\pi \sigma^2}e^{\frac{-(x^2+y^2)}{2\sigma^2}}$$
 
 # ╔═╡ 59057c2a-f29e-11ea-2c71-efa59fa9dc45
 function gaussian_2D(x, y, sigma=1)
-	return 1 / (2 * pi * sigma^2) * exp(-((x^2 + y^2) / 2 * sigma^2))
+	return (1 / (2 * pi * sigma^2)) * exp(-(x^2 + y^2) / (2 * sigma^2))
 end
 
 # ╔═╡ aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 function with_gaussian_blur(image)
-	n=1
-	g_k = [gaussian_2D(x, y) for x in -n:n, y in -n:n ]
-	g_k = g_k ./ sum(g_k)
+	n=6
+	g_k = [gaussian_2D(x, y, 3) for x in -n:n, y in -n:n ]
+	g_k = g_k ./ sum(g_k)	
 	return convolve_image(image, g_k)
 end
+
+# ╔═╡ 0f98836a-f38f-11ea-1d84-dd3157739e04
+begin
+	nature=download("https://unsplash.com/photos/60XLoOgwkfA/download?force=true&w=640")
+	[load(nature) with_gaussian_blur(load(nature))]
+end
+
+# ╔═╡ 11e032aa-f397-11ea-1563-03e30ab4ab2a
+with_gaussian_blur(philip)
 
 # ╔═╡ 8ae59674-ee18-11ea-3815-f50713d0fa08
 md"_Let's make it interactive. 💫_"
@@ -1601,6 +1606,8 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═7c50ea80-ee15-11ea-328f-6b4e4ff20b7e
 # ╠═59057c2a-f29e-11ea-2c71-efa59fa9dc45
 # ╠═aad67fd0-ee15-11ea-00d4-274ec3cda3a3
+# ╠═0f98836a-f38f-11ea-1d84-dd3157739e04
+# ╠═11e032aa-f397-11ea-1563-03e30ab4ab2a
 # ╟─8ae59674-ee18-11ea-3815-f50713d0fa08
 # ╠═94c0798e-ee18-11ea-3212-1533753eabb6
 # ╠═cd1cb766-f2c3-11ea-0571-8de619bfa1b8

@@ -1,4 +1,4 @@
-using Images, FileIO
+using Images, FileIO, ImageView
 
 function extend(v, i)
 	if i in 1:length(v) return v[i] end
@@ -94,5 +94,6 @@ end
 
 # file = download("https://i.imgur.com/VGPeJ6s.jpg", "philip.jpg")
 
-# with_gaussian_blur(load("dog.jpg"))
-with_sobel_edge_detect(load("dog.jpg"))
+imshow(with_gaussian_blur(load("dog.jpg")))
+
+imshow(with_sobel_edge_detect(load("dog.jpg")))

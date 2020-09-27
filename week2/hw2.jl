@@ -418,14 +418,17 @@ Return these two values in a tuple.
 
 # ╔═╡ 8ec27ef8-f320-11ea-2573-c97b7b908cb7
 ## returns lowest possible sum energy at pixel (i, j), and the column to jump to in row i+1.
-function least_energy(energies, i, j)
-	# base case
-	# if i == something
-	#    return energies[...] # no need for recursive computation in the base case!
-	# end
-	#
-	# induction
-	# combine results from recursive calls to `least_energy`.
+function least_energy(energies, i, j)    
+    m, n = size(energies)
+    if i == m
+        return energies[i,j]
+    end
+    sw_e = least_energy(energies, i + 1, clamp(j - 1, 1, n))[1]
+    s_e = least_energy(energies, i + 1, j)[1]
+    se_e = least_energy(energies, i + 1, clamp(j + 1, 1, n))[1]
+    min_e, idx = findmin([sw_e, s_e, se_e])
+    t_e = energies[i,j] + min_e
+    return (t_e, clamp(j + idx - 2, 1, n))
 end
 
 # ╔═╡ a7f3d9f8-f3bb-11ea-0c1a-55bbb8408f09
@@ -957,8 +960,8 @@ bigbreak
 # ╟─0fbe2af6-f381-11ea-2f41-23cd1cf930d9
 # ╟─48089a00-f321-11ea-1479-e74ba71df067
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
-# ╟─437ba6ce-f37d-11ea-1010-5f6a6e282f9b
-# ╟─ef88c388-f388-11ea-3828-ff4db4d1874e
+# ╠═437ba6ce-f37d-11ea-1010-5f6a6e282f9b
+# ╠═ef88c388-f388-11ea-3828-ff4db4d1874e
 # ╟─ef26374a-f388-11ea-0b4e-67314a9a9094
 # ╟─6bdbcf4c-f321-11ea-0288-fb16ff1ec526
 # ╟─ffc17f40-f380-11ea-30ee-0fe8563c0eb1

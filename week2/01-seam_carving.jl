@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.13
+# v0.11.14
 
 using Markdown
 using InteractiveUtils
@@ -64,9 +64,6 @@ md"Select an image below!"
 
 # ╔═╡ d2ae6dd2-eef9-11ea-02df-255ec3b46a36
 img = load(download(image_url))
-
-# ╔═╡ 8ded023c-f35c-11ea-317c-11f5d1b67998
-
 
 # ╔═╡ 0b6010a8-eef6-11ea-3ad6-c1f10e30a413
 # arbitrarily choose the brightness of a pixel as mean of rgb
@@ -439,8 +436,7 @@ end
 # ╟─bf750d0e-f35c-11ea-0245-713584583fcf
 # ╟─90f44be8-f35c-11ea-2fc6-c361fd4966af
 # ╟─d2ae6dd2-eef9-11ea-02df-255ec3b46a36
-# ╠═8ded023c-f35c-11ea-317c-11f5d1b67998
-# ╟─0b6010a8-eef6-11ea-3ad6-c1f10e30a413
+# ╠═0b6010a8-eef6-11ea-3ad6-c1f10e30a413
 # ╠═fc1c43cc-eef6-11ea-0fc4-a90ac4336964
 # ╟─82c0d0c8-efec-11ea-1bb9-83134ecb877e
 # ╠═da726954-eff0-11ea-21d4-a7f4ae4a6b09
@@ -451,7 +447,7 @@ end
 # ╟─ac8d6902-f069-11ea-0f1d-9b0fa706d769
 # ╠═ddac52ea-f148-11ea-2860-21cff4c867e6
 # ╠═6f7bd064-eff4-11ea-0260-f71aa7f4f0e5
-# ╟─d6a268c0-eff4-11ea-2c9e-bfef19c7f540
+# ╠═d6a268c0-eff4-11ea-2c9e-bfef19c7f540
 # ╟─172c7612-efee-11ea-077a-5d5c6e2505a4
 # ╟─fcf46120-efec-11ea-06b9-45f470899cb2
 # ╟─dec62538-efee-11ea-1e03-0b801e61e91c

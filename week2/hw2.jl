@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.12
+# v0.11.14
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ Feel free to ask questions!
 # ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Vlad Flore", kerberos_id = "")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -159,7 +159,9 @@ function remove_in_each_row_no_vcat(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+# 		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= img[i, 1:j-1]
+		img′[i, j:end] .= img[i, j+1:end]
 	end
 	img′
 end
@@ -181,7 +183,7 @@ md"""
 
 # ╔═╡ e49235a4-f367-11ea-3913-f54a4a6b2d6b
 no_vcat_observation = md"""
-<Your answer here>
+687
 """
 
 # ╔═╡ 837c43a4-f368-11ea-00a3-990a45cb0cbd
@@ -203,7 +205,9 @@ function remove_in_each_row_views(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+# 		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= @view img[i, 1:j-1]
+		img′[i, j:end] .= @view img[i, j+1:end]
 	end
 	img′
 end
@@ -238,7 +242,7 @@ Nice! If you did your optimizations right, you should be able to get down the es
 
 # ╔═╡ fd819dac-f368-11ea-33bb-17148387546a
 views_observation = md"""
-<your answer here>
+684
 """
 
 # ╔═╡ 318a2256-f369-11ea-23a9-2f74c566549b
@@ -330,8 +334,19 @@ random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)
 
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
-	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+    m, n = size(energies)
+    seam = zeros(Int, m)
+    seam[1] = starting_pixel
+    for row in 2:m
+        sw = energies[row, clamp(starting_pixel - 1, 1, n)]
+        s = energies[row, clamp(starting_pixel, 1, n)]
+        se = energies[row, clamp(starting_pixel + 1, 1, n)]
+        min, idx = findmin([sw, s, se])
+		new_starting_pixel = clamp(starting_pixel + idx - 2, 1, n)
+        seam[row] = new_starting_pixel
+		starting_pixel = new_starting_pixel
+    end
+    return seam
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
@@ -345,7 +360,7 @@ md"Before we apply your function to our test image, let's try it out on a small 
 # catch end
 
 # ╔═╡ 7ddee6fc-f394-11ea-31fc-5bd665a65bef
-greedy_test = Gray.(rand(Float64, (8,10)));
+greedy_test = Gray.(rand(Float64, (8,10)))
 
 # ╔═╡ 6f52c1a2-f395-11ea-0c8a-138a77f03803
 md"Starting pixel: $(@bind greedy_starting_pixel Slider(1:size(greedy_test, 2); show_value=true))"
@@ -640,17 +655,6 @@ if shrink_greedy
 	greedy_carved[greedy_n]
 end
 
-# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
-if shrink_recursive
-	recursive_carved = shrink_n(pika, 3, recursive_seam)
-	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
-end
-
-# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
-if shrink_recursive
-	recursive_carved[recursive_n]
-end
-
 # ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
 if shrink_dict
 	dict_carved = shrink_n(img, 200, recursive_memoized_seam)
@@ -707,6 +711,17 @@ if compute_access
 	tracked = track_access(energy(pika))
 	least_energy(tracked, 1,7)
 	tracked.accesses[]
+end
+
+# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
+if shrink_recursive
+	recursive_carved = shrink_n(pika, 3, recursive_seam)
+	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
+end
+
+# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
+if shrink_recursive
+	recursive_carved[recursive_n]
 end
 
 # ╔═╡ ffc17f40-f380-11ea-30ee-0fe8563c0eb1
@@ -885,17 +900,17 @@ bigbreak
 # ╟─8ba9f5fc-f31b-11ea-00fe-79ecece09c25
 # ╟─f5a74dfc-f388-11ea-2577-b543d31576c6
 # ╟─c3543ea4-f393-11ea-39c8-37747f113b96
-# ╟─2f9cbea8-f3a1-11ea-20c6-01fd1464a592
+# ╠═2f9cbea8-f3a1-11ea-20c6-01fd1464a592
 # ╠═abf20aa0-f31b-11ea-2548-9bea4fab4c37
 # ╟─5430d772-f397-11ea-2ed8-03ee06d02a22
 # ╟─f580527e-f397-11ea-055f-bb9ea8f12015
-# ╟─6f52c1a2-f395-11ea-0c8a-138a77f03803
-# ╟─2a7e49b8-f395-11ea-0058-013e51baa554
-# ╟─7ddee6fc-f394-11ea-31fc-5bd665a65bef
-# ╟─980b1104-f394-11ea-0948-21002f26ee25
+# ╠═6f52c1a2-f395-11ea-0c8a-138a77f03803
+# ╠═2a7e49b8-f395-11ea-0058-013e51baa554
+# ╠═7ddee6fc-f394-11ea-31fc-5bd665a65bef
+# ╠═980b1104-f394-11ea-0948-21002f26ee25
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
 # ╟─87efe4c2-f38d-11ea-39cc-bdfa11298317
-# ╟─f6571d86-f388-11ea-0390-05592acb9195
+# ╠═f6571d86-f388-11ea-0390-05592acb9195
 # ╟─f626b222-f388-11ea-0d94-1736759b5f52
 # ╟─52452d26-f36c-11ea-01a6-313114b4445d
 # ╠═2a98f268-f3b6-11ea-1eea-81c28256a19e

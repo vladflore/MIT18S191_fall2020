@@ -43,7 +43,7 @@ end
 function least_energy(energies, i, j)
     m, n = size(energies)
     if i == m
-        return energies[i,j]
+        return (energies[i,j], j)
     end
     sw_e = least_energy(energies, i + 1, clamp(j - 1, 1, n))[1]
     s_e = least_energy(energies, i + 1, j)[1]
@@ -70,10 +70,22 @@ function energy(img)
     energy(∇x, ∇y)
 end
 
-# pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")), 150)
-pika = load(download("https://art.pixilart.com/901d53bcda6b27b.png"))
+pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")), 150)
+# pika = load(download("https://art.pixilart.com/901d53bcda6b27b.png"))
 
 # println(energy(pika))
 # println(least_energy(energy(pika), 1, 7))
 
 imshow(energy(pika))
+
+function recursive_seam(energies, starting_pixel)
+    m, n = size(energies)
+    seam = zeros(Int, m)
+    seam[1] = starting_pixel
+    for i in 2:m
+        seam[i] = least_energy(energies, i, seam[i - 1])[2]
+    end
+    return seam
+end
+
+println(recursive_seam(energy(pika), 1))

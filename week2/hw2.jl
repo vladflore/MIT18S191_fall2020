@@ -421,7 +421,7 @@ Return these two values in a tuple.
 function least_energy(energies, i, j)    
     m, n = size(energies)
     if i == m
-        return energies[i,j]
+        return (energies[i,j], j)
     end
     sw_e = least_energy(energies, i + 1, clamp(j - 1, 1, n))[1]
     s_e = least_energy(energies, i + 1, j)[1]
@@ -465,9 +465,13 @@ This will give you the method used in the lecture to perform [exhaustive search 
 
 # ╔═╡ 85033040-f372-11ea-2c31-bb3147de3c0d
 function recursive_seam(energies, starting_pixel)
-	m, n = size(energies)
-	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+    m, n = size(energies)
+    seam = zeros(Int, m)
+    seam[1] = starting_pixel
+    for i in 2:m
+        seam[i] = least_energy(energies, i, seam[i - 1])[2]
+    end
+    return seam
 end
 
 # ╔═╡ 1d55333c-f393-11ea-229a-5b1e9cabea6a
@@ -934,7 +938,7 @@ bigbreak
 # ╠═e66ef06a-f392-11ea-30ab-7160e7723a17
 # ╟─c572f6ce-f372-11ea-3c9a-e3a21384edca
 # ╠═6d993a5c-f373-11ea-0dde-c94e3bbd1552
-# ╠═ea417c2a-f373-11ea-3bb0-b1b5754f2fac
+# ╟─ea417c2a-f373-11ea-3bb0-b1b5754f2fac
 # ╟─56a7f954-f374-11ea-0391-f79b75195f4d
 # ╠═b1d09bc8-f320-11ea-26bb-0101c9a204e2
 # ╠═3e8b0868-f3bd-11ea-0c15-011bbd6ac051

@@ -522,20 +522,35 @@ You are expected to read and understand the [documentation on dictionaries](http
 
 # ╔═╡ b1d09bc8-f320-11ea-26bb-0101c9a204e2
 function memoized_least_energy(energies, i, j, memory)
-	m, n = size(energies)
-	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+    m, n = size(energies)
+    if i == m
+        return (energies[i,j], j)
+    end
+
+    if haskey(memory, (i, j))
+        return (memory[(i, j)], j)
+    else
+        sw_e = memoized_least_energy(energies, i + 1, clamp(j - 1, 1, n), memory)[1]
+        s_e = memoized_least_energy(energies, i + 1, j, memory)[1]
+        se_e = memoized_least_energy(energies, i + 1, clamp(j + 1, 1, n), memory)[1]
+        min_e, idx = findmin([sw_e, s_e, se_e])
+        t_e = energies[i,j] + min_e
+        memory[(i, j)] = t_e
+        return (t_e, clamp(j + idx - 2, 1, n))
+    end
 end
 
 # ╔═╡ 3e8b0868-f3bd-11ea-0c15-011bbd6ac051
 function recursive_memoized_seam(energies, starting_pixel)
-	memory = Dict{Tuple{Int,Int}, Float64}() # location => least energy.
+	memory = Dict{Tuple{Int,Int},Float64}() # location => least energy.
 	                                         # pass this every time you call memoized_least_energy.
-	m, n = size(energies)
-	
-	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+    m, n = size(energies)
+    seam = zeros(Int, m)
+    seam[1] = starting_pixel
+    for i in 2:m
+        seam[i] = memoized_least_energy(energies, i, seam[i - 1], memory)[2]
+    end
+    return seam
 end
 
 # ╔═╡ 4e3bcf88-f3c5-11ea-3ada-2ff9213647b7

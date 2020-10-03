@@ -1,5 +1,9 @@
 using ImageView, Images, ImageFiltering, Statistics
 
+# ==================================================================================
+# Exercise 2 - Building up to dynamic programming
+# ==================================================================================
+
 random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)], 1:m - 1; init=[i])
 
 function greedy_seam(energies, starting_pixel::Int)
@@ -76,7 +80,7 @@ pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")), 
 # println(energy(pika))
 # println(least_energy(energy(pika), 1, 7))
 
-imshow(energy(pika))
+# imshow(energy(pika))
 
 function recursive_seam(energies, starting_pixel)
     m, n = size(energies)
@@ -88,4 +92,45 @@ function recursive_seam(energies, starting_pixel)
     return seam
 end
 
-println(recursive_seam(energy(pika), 1))
+# println(recursive_seam(energy(pika), 1))
+
+# ==================================================================================
+# Exercise 3 - Memoization
+# ==================================================================================
+
+function memoized_least_energy(energies, i, j, memory)
+    println(memory)
+    m, n = size(energies)
+    if i == m
+        return (energies[i,j], j)
+    end
+
+    if haskey(memory, (i, j))
+        return (memory[(i, j)], j)
+    else
+        sw_e = memoized_least_energy(energies, i + 1, clamp(j - 1, 1, n), memory)[1]
+        s_e = memoized_least_energy(energies, i + 1, j, memory)[1]
+        se_e = memoized_least_energy(energies, i + 1, clamp(j + 1, 1, n), memory)[1]
+        min_e, idx = findmin([sw_e, s_e, se_e])
+        t_e = energies[i,j] + min_e
+        memory[(i, j)] = t_e
+        return (t_e, clamp(j + idx - 2, 1, n))
+    end
+end
+
+function recursive_memoized_seam(energies, starting_pixel)
+	memory = Dict{Tuple{Int,Int},Float64}() # location => least energy.
+	                                         # pass this every time you call memoized_least_energy.
+    m, n = size(energies)
+    seam = zeros(Int, m)
+    seam[1] = starting_pixel
+    for i in 2:m
+        seam[i] = memoized_least_energy(energies, i, seam[i - 1], memory)[2]
+    end
+    return seam
+end
+
+# fruits = load(download("https://i.imgur.com/4SRnmkj.png"))
+# println("Start")
+# println(recursive_memoized_seam(energy(fruits), 1))
+# println("End")

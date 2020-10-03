@@ -74,7 +74,7 @@ function energy(img)
     energy(∇x, ∇y)
 end
 
-pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")), 150)
+# pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")), 150)
 # pika = load(download("https://art.pixilart.com/901d53bcda6b27b.png"))
 
 # println(energy(pika))
@@ -93,6 +93,10 @@ function recursive_seam(energies, starting_pixel)
 end
 
 # println(recursive_seam(energy(pika), 1))
+
+melting = "https://cdn.shortpixel.ai/spai/w_1086+q_lossy+ret_img+to_webp/https://wisetoast.com/wp-content/uploads/2015/10/The-Persistence-of-Memory-salvador-deli-painting.jpg"
+melting_img = load(download(melting))
+imshow(energy(melting_img))
 
 # ==================================================================================
 # Exercise 3 - Memoization
